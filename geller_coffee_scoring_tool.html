@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geller Consulting · Coffee Prospect Scoring Tool</title>
+<style>
+  :root {
+    --brown-dark: #3B1F0E;
+    --brown-primary: #6B4423;
+    --brown-mid: #8B5E3C;
+    --brown-light: #C49A6C;
+    --brown-pale: #F5EDE4;
+    --brown-cream: #FBF7F3;
+    --white: #FFFFFF;
+    --gray-line: #E0D5CC;
+    --gray-text: #6B6560;
+    --black-text: #1A1208;
+    --green-ok: #2E7D32;
+    --yellow-warm: #B8860B;
+    --red-move: #8B2020;
+
+    --font-display: 'Georgia', 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--brown-cream);
+    color: var(--black-text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--brown-dark);
+    color: var(--white);
+    padding: 28px 40px 24px;
+    border-bottom: 3px solid var(--brown-light);
+  }
+  .header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brown-light);
+    margin-bottom: 6px;
+    font-family: var(--font-body);
+  }
+  .header-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: normal;
+    letter-spacing: 0.02em;
+    color: var(--white);
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--brown-light);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--brown-dark);
+    padding: 0 40px;
+    border-bottom: 1px solid var(--brown-mid);
+  }
+  .tab {
+    padding: 12px 24px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brown-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .tab:hover { color: var(--white); }
+  .tab.active {
+    color: var(--white);
+    border-bottom: 3px solid var(--brown-light);
+  }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 900px; margin: 0 auto; padding: 36px 24px 60px; }
+
+  /* SECTION BLOCKS */
+  .section-block {
+    background: var(--white);
+    border: 1px solid var(--gray-line);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--brown-primary);
+    color: var(--white);
+    padding: 14px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brown-light);
+    font-weight: 700;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--white);
+    font-weight: normal;
+  }
+  .section-body { padding: 24px; }
+
+  /* BUSINESS INFO */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .info-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    font-weight: 700;
+  }
+  input[type="text"], input[type="date"], select {
+    border: 1px solid var(--gray-line);
+    border-radius: 2px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    color: var(--black-text);
+    background: var(--brown-cream);
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input[type="text"]:focus, input[type="date"]:focus, select:focus {
+    outline: none;
+    border-color: var(--brown-primary);
+    background: var(--white);
+  }
+
+  /* SCORE ROWS */
+  .score-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--brown-pale);
+    gap: 16px;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-label {
+    flex: 1;
+    font-size: 14px;
+    color: var(--black-text);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .score-desc {
+    font-size: 11px;
+    color: var(--gray-text);
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .score-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 240px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 160px;
+    height: 4px;
+    background: var(--gray-line);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--brown-primary);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .score-value {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--brown-primary);
+    min-width: 32px;
+    text-align: right;
+  }
+  .score-max {
+    font-size: 11px;
+    color: var(--gray-text);
+  }
+
+  /* COMPETITOR FIELDS */
+  .comp-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--gray-line);
+  }
+  .comp-label-small {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  /* STAGE TOTALS */
+  .stage-total {
+    background: var(--brown-pale);
+    border: 1px solid var(--brown-light);
+    border-radius: 2px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .stage-total-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brown-primary);
+    font-weight: 700;
+  }
+  .stage-total-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--brown-dark);
+    font-weight: bold;
+  }
+
+  /* FINAL SCORE */
+  .final-score-block {
+    background: var(--brown-dark);
+    color: var(--white);
+    padding: 28px 32px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .final-score-left { flex: 1; }
+  .final-score-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brown-light);
+    margin-bottom: 6px;
+  }
+  .final-score-number {
+    font-family: var(--font-display);
+    font-size: 64px;
+    line-height: 1;
+    color: var(--white);
+  }
+  .final-score-denom {
+    font-size: 16px;
+    color: var(--brown-light);
+  }
+  .final-score-right { text-align: right; }
+  .priority-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 2px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .priority-fast { background: var(--green-ok); color: #fff; }
+  .priority-warm { background: var(--yellow-warm); color: #fff; }
+  .priority-move { background: var(--red-move); color: #fff; }
+  .priority-action-text {
+    font-size: 12px;
+    color: var(--brown-light);
+    margin-top: 8px;
+  }
+
+  /* SAVE BUTTON */
+  .save-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--brown-primary);
+    color: var(--white);
+    border: none;
+    border-radius: 2px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: var(--font-body);
+    margin-bottom: 24px;
+  }
+  .save-btn:hover { background: var(--brown-dark); }
+  .save-btn:disabled { background: var(--gray-text); cursor: not-allowed; }
+
+  .status-msg {
+    text-align: center;
+    font-size: 13px;
+    padding: 10px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .status-msg.success { background: #E8F5E9; color: var(--green-ok); display: block; }
+  .status-msg.error { background: #FFEBEE; color: var(--red-move); display: block; }
+  .status-msg.loading { background: var(--brown-pale); color: var(--brown-primary); display: block; }
+
+  /* HISTORY TAB */
+  .history-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .refresh-btn {
+    padding: 10px 20px;
+    background: var(--brown-primary);
+    color: var(--white);
+    border: none;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .refresh-btn:hover { background: var(--brown-dark); }
+
+  .sort-select {
+    padding: 10px 14px;
+    border: 1px solid var(--gray-line);
+    border-radius: 2px;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--black-text);
+    cursor: pointer;
+  }
+
+  .history-table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    background: var(--brown-dark);
+    color: var(--white);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { background: var(--brown-primary); }
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--brown-pale);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--brown-pale); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-fast { background: #E8F5E9; color: var(--green-ok); }
+  .badge-warm { background: #FFF8E1; color: var(--yellow-warm); }
+  .badge-move { background: #FFEBEE; color: var(--red-move); }
+
+  .score-cell {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--brown-dark);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--gray-text);
+  }
+  .empty-state-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--brown-mid);
+    margin-bottom: 8px;
+  }
+  .empty-state-sub { font-size: 13px; }
+
+  /* FOOTER */
+  .footer {
+    background: var(--brown-dark);
+    color: var(--brown-light);
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-top: 40px;
+  }
+
+  /* PANEL SHOW/HIDE */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* THRESHOLD LEGEND */
+  .threshold-legend {
+    display: flex;
+    gap: 20px;
+    padding: 14px 24px;
+    background: var(--brown-pale);
+    border-top: 1px solid var(--gray-line);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gray-text);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-fast { background: var(--green-ok); }
+  .dot-warm { background: var(--yellow-warm); }
+  .dot-move { background: var(--red-move); }
+
+  @media (max-width: 600px) {
+    .header { padding: 20px; }
+    .main { padding: 20px 16px 40px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .info-grid.three { grid-template-columns: 1fr; }
+    .comp-fields { grid-template-columns: 1fr; }
+    .final-score-block { flex-direction: column; text-align: center; }
+    .final-score-right { text-align: center; }
+    .score-slider-wrap { min-width: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Geller Consulting · AI-Powered Operations & Growth Strategy</div>
+  <div class="header-title">Coffee Prospect Scoring Tool</div>
+  <div class="header-sub">Coffee Shops & Cafés · Capital Region, New York · 2026</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('score')">Score a Prospect</div>
+  <div class="tab" onclick="showTab('history')">Prospect History</div>
+</div>
+
+<!-- SCORE PANEL -->
+<div id="panel-score" class="panel active">
+  <div class="main">
+
+    <!-- BUSINESS INFO -->
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-label">01</span>
+        <span class="section-title">Business Information</span>
+      </div>
+      <div class="section-body">
+        <div class="info-grid">
+          <div class="field-group">
+            <span class="field-label">Business Name</span>
+            <input type="text" id="bizName" placeholder="e.g. Uncommon Grounds">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Date</span>
+            <input type="date" id="scoreDate">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Location / Address</span>
+            <input type="text" id="bizLocation" placeholder="e.g. 402 Broadway, Saratoga Springs">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Vertical</span>
+            <select id="vertical">
+              <option value="Coffee" selected>Coffee</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 1 -->
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-label">Stage 1</span>
+        <span class="section-title">Pre-Recon · Score Before You Walk In · 50 Points</span>
+      </div>
+      <div class="section-body">
+
+        <div class="score-row">
+          <div class="score-label">
+            Social Media Presence
+            <div class="score-desc">Active accounts, engagement quality, content consistency. No posts in 30+ days = low score.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s1" oninput="updateScore('s1','v1')">
+            <span class="score-value" id="v1">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Location & Foot Traffic
+            <div class="score-desc">Main road vs back lot, visibility, nearby traffic drivers. Corner of Broadway scores higher than strip mall.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s2" oninput="updateScore('s2','v2')">
+            <span class="score-value" id="v2">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Neighborhood Income
+            <div class="score-desc">Higher income signals stronger budget. Clifton Park $130K · Saratoga $100K · Waterford $75K · Mechanicville $47K.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s3" oninput="updateScore('s3','v3')">
+            <span class="score-value" id="v3">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Time in Business
+            <div class="score-desc">Established and surviving signals stable budget and an owner who takes it seriously.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s4" oninput="updateScore('s4','v4')">
+            <span class="score-value" id="v4">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Competitive Positioning
+            <div class="score-desc">How do they stack up against their top 3 direct competitors? Name them below.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s5" oninput="updateScore('s5','v5')">
+            <span class="score-value" id="v5">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="comp-fields">
+          <div>
+            <span class="comp-label-small">Competitor 1</span>
+            <input type="text" id="comp1" placeholder="Business name">
+          </div>
+          <div>
+            <span class="comp-label-small">Competitor 2</span>
+            <input type="text" id="comp2" placeholder="Business name">
+          </div>
+          <div>
+            <span class="comp-label-small">Competitor 3</span>
+            <input type="text" id="comp3" placeholder="Business name">
+          </div>
+        </div>
+
+      </div>
+      <div class="stage-total">
+        <span class="stage-total-label">Stage 1 Total</span>
+        <div>
+          <span class="stage-total-value" id="stage1Total">25</span>
+          <span class="score-max"> / 50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 2 -->
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-label">Stage 2</span>
+        <span class="section-title">Post-Recon · Score After Your First Meeting · 50 Points</span>
+      </div>
+      <div class="section-body">
+
+        <div class="score-row">
+          <div class="score-label">
+            Urgency
+            <div class="score-desc">How immediate and painful is their problem? Facing real pressure now = 9. Comfortable and profitable = 3.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s6" oninput="updateScore('s6','v6')">
+            <span class="score-value" id="v6">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Openness
+            <div class="score-desc">How receptive to outside perspective and change? Defensive or dismissive in meeting one = low score.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s7" oninput="updateScore('s7','v7')">
+            <span class="score-value" id="v7">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Budget
+            <div class="score-desc">Realistic ability to sustain a retainer. Multi-location = high. Struggling single location with tight margins = low.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s8" oninput="updateScore('s8','v8')">
+            <span class="score-value" id="v8">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            AI Usage — Current State
+            <div class="score-desc">Not using AI at all = high score (more opportunity). Already using AI tools effectively = lower score.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s9" oninput="updateScore('s9','v9')">
+            <span class="score-value" id="v9">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-label">
+            Personal Fit
+            <div class="score-desc">How did the meeting feel? Do you want to work with this person? Trust your gut — it's always been right.</div>
+          </div>
+          <div class="score-slider-wrap">
+            <input type="range" min="0" max="10" value="5" id="s10" oninput="updateScore('s10','v10')">
+            <span class="score-value" id="v10">5</span>
+            <span class="score-max">/ 10</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="stage-total">
+        <span class="stage-total-label">Stage 2 Total</span>
+        <div>
+          <span class="stage-total-value" id="stage2Total">25</span>
+          <span class="score-max"> / 50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINAL SCORE -->
+    <div class="final-score-block" id="finalScoreBlock">
+      <div class="final-score-left">
+        <div class="final-score-eyebrow">Final Score</div>
+        <div>
+          <span class="final-score-number" id="finalScore">50</span>
+          <span class="final-score-denom"> / 100</span>
+        </div>
+      </div>
+      <div class="final-score-right">
+        <div id="priorityBadge" class="priority-badge priority-warm">Keep Warm</div>
+        <div class="priority-action-text" id="priorityAction">Keep in contact. Check back in 60 days.</div>
+      </div>
+    </div>
+
+    <div class="threshold-legend">
+      <div class="legend-item"><div class="legend-dot dot-fast"></div> 80–100 · Move Fast</div>
+      <div class="legend-item"><div class="legend-dot dot-warm"></div> 60–79 · Keep Warm</div>
+      <div class="legend-item"><div class="legend-dot dot-move"></div> Below 60 · Move On</div>
+    </div>
+
+    <br>
+
+    <div id="statusMsg" class="status-msg"></div>
+
+    <button class="save-btn" onclick="saveScore()" id="saveBtn">
+      Save to Google Sheet
+    </button>
+
+  </div>
+</div>
+
+<!-- HISTORY PANEL -->
+<div id="panel-history" class="panel">
+  <div class="main">
+    <div class="history-controls">
+      <button class="refresh-btn" onclick="loadHistory()">↻ Refresh</button>
+      <select class="sort-select" id="sortCol" onchange="renderHistory()">
+        <option value="18">Sort by Final Score</option>
+        <option value="0">Sort by Date</option>
+        <option value="2">Sort by Business Name</option>
+        <option value="19">Sort by Priority</option>
+      </select>
+    </div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-label">All Prospects</span>
+        <span class="section-title">Coffee Vertical · Saved Scores</span>
+      </div>
+      <div class="history-table-wrap">
+        <table id="historyTable">
+          <thead>
+            <tr>
+              <th onclick="sortBy(0)">Date</th>
+              <th onclick="sortBy(2)">Business</th>
+              <th onclick="sortBy(11)">Stage 1</th>
+              <th onclick="sortBy(17)">Stage 2</th>
+              <th onclick="sortBy(18)">Final</th>
+              <th onclick="sortBy(19)">Priority</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-state-title">No scores yet</div>
+                  <div class="empty-state-sub">Score your first prospect and save it — it will appear here.</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="threshold-legend">
+        <div class="legend-item"><div class="legend-dot dot-fast"></div> 80–100 · Move Fast</div>
+        <div class="legend-item"><div class="legend-dot dot-warm"></div> 60–79 · Keep Warm</div>
+        <div class="legend-item"><div class="legend-dot dot-move"></div> Below 60 · Move On</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Geller Consulting &nbsp;·&nbsp; Saratoga Springs, NY &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; Confidential & Proprietary
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3rLJACrhmp_w4nYAJTkPwXZm_sHzhQMkR3B5zvCel0hUQGpjN1Xkr7i0e9T0X3Kl0iA/exec';
+
+  let historyData = [];
+  let sortColIndex = 18;
+  let sortAsc = false;
+
+  // Set today's date on load
+  window.onload = function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('scoreDate').value = today;
+    updateAllScores();
+  };
+
+  function showTab(tab) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    event.target.classList.add('active');
+    if (tab === 'history') loadHistory();
+  }
+
+  function updateScore(inputId, valueId) {
+    const val = document.getElementById(inputId).value;
+    document.getElementById(valueId).textContent = val;
+    updateAllScores();
+  }
+
+  function updateAllScores() {
+    const s = [1,2,3,4,5,6,7,8,9,10].map(i => parseInt(document.getElementById('s'+i).value));
+    const stage1 = s[0]+s[1]+s[2]+s[3]+s[4];
+    const stage2 = s[5]+s[6]+s[7]+s[8]+s[9];
+    const final = stage1 + stage2;
+
+    document.getElementById('stage1Total').textContent = stage1;
+    document.getElementById('stage2Total').textContent = stage2;
+    document.getElementById('finalScore').textContent = final;
+
+    const badge = document.getElementById('priorityBadge');
+    const action = document.getElementById('priorityAction');
+    badge.className = 'priority-badge';
+
+    if (final >= 80) {
+      badge.classList.add('priority-fast');
+      badge.textContent = 'Move Fast';
+      action.textContent = 'Move fast. Send recap same day. Propose pilot engagement.';
+    } else if (final >= 60) {
+      badge.classList.add('priority-warm');
+      badge.textContent = 'Keep Warm';
+      action.textContent = 'Qualified but not urgent. Keep in contact. Check back in 60 days.';
+    } else {
+      badge.classList.add('priority-move');
+      badge.textContent = 'Move On';
+      action.textContent = 'Not ready. Wrong timing. Wrong fit. Politely disengage.';
+    }
+  }
+
+  function getPriorityAction(score) {
+    if (score >= 80) return 'Move Fast';
+    if (score >= 60) return 'Keep Warm';
+    return 'Move On';
+  }
+
+  async function saveScore() {
+    const bizName = document.getElementById('bizName').value.trim();
+    if (!bizName) {
+      showStatus('Please enter a business name before saving.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    showStatus('Saving to Google Sheet...', 'loading');
+
+    const s = [1,2,3,4,5,6,7,8,9,10].map(i => parseInt(document.getElementById('s'+i).value));
+    const stage1Total = s[0]+s[1]+s[2]+s[3]+s[4];
+    const stage2Total = s[5]+s[6]+s[7]+s[8]+s[9];
+    const finalScore = stage1Total + stage2Total;
+
+    const payload = {
+      date: document.getElementById('scoreDate').value,
+      vertical: document.getElementById('vertical').value,
+      bizName: bizName,
+      comp1: document.getElementById('comp1').value,
+      comp2: document.getElementById('comp2').value,
+      comp3: document.getElementById('comp3').value,
+      s1: s[0], s2: s[1], s3: s[2], s4: s[3], s5: s[4],
+      stage1Total: stage1Total,
+      s6: s[5], s7: s[6], s8: s[7], s9: s[8], s10: s[9],
+      stage2Total: stage2Total,
+      finalScore: finalScore,
+      priorityAction: getPriorityAction(finalScore)
+    };
+
+    try {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showStatus('✓ Saved successfully — ' + bizName + ' added to your Google Sheet.', 'success');
+    } catch (err) {
+      showStatus('Save failed. Check your internet connection and try again.', 'error');
+    }
+
+    btn.disabled = false;
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + type;
+  }
+
+  async function loadHistory() {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">Loading...</div></div></td></tr>';
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now());
+      const json = await res.json();
+      historyData = json.data || [];
+      // Remove header row if present
+      if (historyData.length > 0 && historyData[0][0] === 'Date') {
+        historyData = historyData.slice(1);
+      }
+      renderHistory();
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">Could not load history</div><div class="empty-state-sub">Check your connection and try refreshing.</div></div></td></tr>';
+    }
+  }
+
+  function sortBy(col) {
+    if (sortColIndex === col) {
+      sortAsc = !sortAsc;
+    } else {
+      sortColIndex = col;
+      sortAsc = col !== 18; // scores default descending
+    }
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const tbody = document.getElementById('historyBody');
+
+    if (!historyData || historyData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-title">No scores yet</div><div class="empty-state-sub">Score your first prospect and save it — it will appear here.</div></div></td></tr>';
+      return;
+    }
+
+    const col = parseInt(document.getElementById('sortCol').value) || sortColIndex;
+    const sorted = [...historyData].sort((a, b) => {
+      const av = a[col] || '';
+      const bv = b[col] || '';
+      const an = parseFloat(av);
+      const bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) return sortAsc ? an - bn : bn - an;
+      return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+
+    tbody.innerHTML = sorted.map(row => {
+      const score = parseInt(row[18]) || 0;
+      const priority = row[19] || getPriorityAction(score);
+      let badgeClass = 'badge-move';
+      if (score >= 80) badgeClass = 'badge-fast';
+      else if (score >= 60) badgeClass = 'badge-warm';
+
+      return `<tr>
+        <td>${row[0] || '—'}</td>
+        <td><strong>${row[2] || '—'}</strong></td>
+        <td>${row[11] || '—'} <span style="color:var(--gray-text);font-size:11px">/ 50</span></td>
+        <td>${row[17] || '—'} <span style="color:var(--gray-text);font-size:11px">/ 50</span></td>
+        <td class="score-cell">${score}</td>
+        <td><span class="badge ${badgeClass}">${priority}</span></td>
+      </tr>`;
+    }).join('');
+  }
+</script>
+</body>
+</html>

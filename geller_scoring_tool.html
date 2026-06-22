@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geller Consulting — Prospect Scoring Tool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #F7F6F2;
+    color: #2B2A28;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #2B5C1F;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1F3D14;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #6B6A66;
+    margin-top: 4px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #DDD9D0;
+  }
+  .tab {
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6B6A66;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    color: #1F3D14;
+    border-bottom: 2px solid #2B5C1F;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .weight-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .weight-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E2D9;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .weight-card .title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .weight-card .sub { font-size: 11px; color: #8A8880; margin-bottom: 6px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+  .badge-cannabis { background: #E3EFDB; color: #2B5C1F; }
+  .badge-coffee { background: #F0E4D4; color: #6B4423; }
+  .badge-art { background: #EDEAE3; color: #4A4742; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8A8880;
+    margin: 20px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #E5E2D9;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  input[type="text"], input[type="date"], select {
+    width: 100%;
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid #D5D1C7;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #2B2A28;
+  }
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E5E2D9;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+  .stage-note {
+    font-size: 12px;
+    color: #8A8880;
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .score-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #F0EEE7;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-label { font-size: 13px; font-weight: 500; }
+  .score-max { font-size: 11px; color: #8A8880; white-space: nowrap; }
+  .score-input {
+    width: 50px;
+    font-size: 14px;
+    padding: 6px;
+    border: 1px solid #D5D1C7;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .comp-section {
+    background: #F7F6F2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0 4px;
+  }
+  .comp-label { font-size: 11px; color: #8A8880; margin-bottom: 4px; }
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .comp-grid input { font-size: 12px; padding: 6px 8px; }
+  .stage-total {
+    font-size: 12px;
+    color: #8A8880;
+    text-align: right;
+    padding-top: 8px;
+  }
+  .total-box {
+    background: #1F3D14;
+    color: #FFFFFF;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 0;
+  }
+  .total-num { font-size: 38px; font-weight: 700; line-height: 1; }
+  .total-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .action-badge {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 14px;
+    font-weight: 600;
+  }
+  .action-high { background: #DCF0CE; color: #2B5C1F; }
+  .action-mid { background: #FAEEDA; color: #8A5A1E; }
+  .action-low { background: #F5DADA; color: #91302F; }
+  .action-default { background: rgba(255,255,255,0.15); color: #FFFFFF; }
+
+  button {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  .btn-primary { background: #2B5C1F; color: #FFFFFF; }
+  .btn-secondary { background: transparent; border: 1px solid #D5D1C7; color: #6B6A66; }
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+
+  .status-msg {
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: none;
+  }
+  .status-success { background: #DCF0CE; color: #2B5C1F; }
+  .status-error { background: #F5DADA; color: #91302F; }
+  .status-loading { background: #F0EEE7; color: #6B6A66; }
+
+  .threshold-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .t-card {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #FFFFFF;
+  }
+  .t-high { border-left: 4px solid #2B5C1F; }
+  .t-mid { border-left: 4px solid #C68A2E; }
+  .t-low { border-left: 4px solid #A33232; }
+  .t-card .title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .t-card .desc { font-size: 12px; color: #8A8880; }
+
+  /* History tab */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: #FFFFFF;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #F0EEE7;
+    white-space: nowrap;
+  }
+  th {
+    background: #F0EEE7;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #6B6A66;
+    cursor: pointer;
+  }
+  th:hover { background: #E5E2D9; }
+  tr:hover { background: #F7F6F2; }
+  .score-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .pill-high { background: #DCF0CE; color: #2B5C1F; }
+  .pill-mid { background: #FAEEDA; color: #8A5A1E; }
+  .pill-low { background: #F5DADA; color: #91302F; }
+  .table-wrap { overflow-x: auto; border-radius: 10px; }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8A8880;
+    font-size: 13px;
+    background: #FFFFFF;
+    border-radius: 10px;
+  }
+  .refresh-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .refresh-row .count { font-size: 13px; color: #6B6A66; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Geller Consulting — Prospect Scoring Tool</h1>
+  <div class="subtitle">10-category scoring · 100 points total · Saratoga Springs, NY · 2026</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="score" onclick="switchTab('score')">Score a Prospect</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">Prospect History</div>
+</div>
+
+<!-- SCORE TAB -->
+<div class="tab-content active" id="tab-score">
+
+  <div class="weight-row">
+    <div class="weight-card">
+      <div class="title">Cannabis dispensary</div>
+      <div class="sub">Primary vertical. 9 years direct experience.</div>
+      <span class="badge badge-cannabis">75% of focus</span>
+    </div>
+    <div class="weight-card">
+      <div class="title">Coffee shop</div>
+      <div class="sub">Hospitality + Coffee School Melbourne.</div>
+      <span class="badge badge-coffee">15% of focus</span>
+    </div>
+    <div class="weight-card">
+      <div class="title">Art gallery / antiques</div>
+      <div class="sub">Gallery ownership. Both sides of the wall.</div>
+      <span class="badge badge-art">10% of focus</span>
+    </div>
+  </div>
+
+  <div class="section-label">Prospect Details</div>
+  <div class="form-row">
+    <div>
+      <select id="vert">
+        <option value="">Select vertical</option>
+        <option value="Cannabis">Cannabis dispensary</option>
+        <option value="Coffee">Coffee shop</option>
+        <option value="Art">Art gallery / antiques</option>
+      </select>
+    </div>
+    <div>
+      <input type="text" id="biz" placeholder="Business name">
+    </div>
+  </div>
+  <div class="form-row">
+    <div>
+      <input type="date" id="scoreDate">
+    </div>
+    <div></div>
+  </div>
+
+  <div class="section-label">Stage 1 — Pre-Recon · Before You Walk In · 50 pts</div>
+  <div class="stage-note">What you know from research. You have not yet met the owner.</div>
+  <div class="card">
+    <div class="score-row">
+      <div class="score-label">Social media presence</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s1" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Location and foot traffic</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s2" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Neighborhood income</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s3" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Time in business</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s4" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div style="padding-top:10px">
+      <div class="score-row" style="border-bottom:none">
+        <div class="score-label">Competitive positioning</div>
+        <div class="score-max">/ 10</div>
+        <input class="score-input" id="s5" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+      </div>
+      <div class="comp-section">
+        <div class="comp-label">Scored against these competitors</div>
+        <div class="comp-grid">
+          <input type="text" id="c1" placeholder="Competitor 1">
+          <input type="text" id="c2" placeholder="Competitor 2">
+          <input type="text" id="c3" placeholder="Competitor 3">
+        </div>
+      </div>
+    </div>
+    <div class="stage-total">Stage 1: <strong id="pre-total">0</strong> / 50</div>
+  </div>
+
+  <div class="section-label">Stage 2 — Post-Recon · After Your First Meeting · 50 pts</div>
+  <div class="stage-note">What you learned in the room. You have met the owner and asked your three anchor questions.</div>
+  <div class="card">
+    <div class="score-row">
+      <div class="score-label">Urgency</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s6" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Openness</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s7" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Budget</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s8" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">AI usage — current state</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s9" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="score-row">
+      <div class="score-label">Personal fit</div>
+      <div class="score-max">/ 10</div>
+      <input class="score-input" id="s10" type="number" min="0" max="10" step="1" placeholder="0" oninput="calc()">
+    </div>
+    <div class="stage-total">Stage 2: <strong id="post-total">0</strong> / 50</div>
+  </div>
+
+  <div class="total-box">
+    <div>
+      <div class="total-num" id="final-score">0</div>
+      <div class="total-sub">out of 100</div>
+    </div>
+    <div style="text-align:right">
+      <div id="action-badge" class="action-badge action-default">Enter scores above</div>
+      <div class="total-sub" id="action-text" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" onclick="saveScore()">Save to Prospect History</button>
+    <button class="btn-secondary" onclick="resetForm()">Clear and start over</button>
+  </div>
+  <div class="status-msg" id="status"></div>
+
+  <div class="threshold-row">
+    <div class="t-card t-high">
+      <div class="title" style="color:#2B5C1F">80–100 · Move fast</div>
+      <div class="desc">Send recap same day. Propose pilot engagement immediately.</div>
+    </div>
+    <div class="t-card t-mid">
+      <div class="title" style="color:#8A5A1E">60–79 · Keep warm</div>
+      <div class="desc">Stay in contact. Revisit in 60 days. Do not chase.</div>
+    </div>
+    <div class="t-card t-low">
+      <div class="title" style="color:#91302F">Below 60 · Move on</div>
+      <div class="desc">Politely disengage. Protect your time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div class="tab-content" id="tab-history">
+  <div class="refresh-row">
+    <div class="count" id="historyCount">Loading prospect history...</div>
+    <button class="btn-secondary" onclick="loadHistory()">Refresh</button>
+  </div>
+  <div id="historyContent"></div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJuAMzQ6_GqG7DOw7DB8JcUdvvLxOS1o6dqqy7lJA9_9EkaQgk726TQ-Kezilndhj_/exec';
+
+// Set today's date as default
+document.getElementById('scoreDate').valueAsDate = new Date();
+
+function getVal(id) {
+  return Math.min(Math.max(parseFloat(document.getElementById(id).value) || 0, 0), 10);
+}
+
+function calc() {
+  const pre = getVal('s1') + getVal('s2') + getVal('s3') + getVal('s4') + getVal('s5');
+  const post = getVal('s6') + getVal('s7') + getVal('s8') + getVal('s9') + getVal('s10');
+  const total = Math.round(pre + post);
+  document.getElementById('pre-total').textContent = Math.round(pre);
+  document.getElementById('post-total').textContent = Math.round(post);
+  document.getElementById('final-score').textContent = total;
+
+  const badge = document.getElementById('action-badge');
+  const text = document.getElementById('action-text');
+  if (total >= 80) {
+    badge.className = 'action-badge action-high';
+    badge.textContent = 'Move fast';
+    text.textContent = 'Send recap same day. Propose pilot engagement.';
+  } else if (total >= 60) {
+    badge.className = 'action-badge action-mid';
+    badge.textContent = 'Keep warm';
+    text.textContent = 'Stay in contact. Revisit in 60 days.';
+  } else {
+    badge.className = 'action-badge action-low';
+    badge.textContent = 'Move on';
+    text.textContent = 'Politely disengage. Protect your time.';
+  }
+  return { pre: Math.round(pre), post: Math.round(post), total };
+}
+
+function getPriorityLabel(total) {
+  if (total >= 80) return 'Move fast';
+  if (total >= 60) return 'Keep warm';
+  return 'Move on';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-msg status-' + type;
+  el.style.display = 'block';
+  if (type === 'success') {
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+}
+
+function saveScore() {
+  const vert = document.getElementById('vert').value;
+  const biz = document.getElementById('biz').value.trim();
+  const date = document.getElementById('scoreDate').value;
+
+  if (!vert) { showStatus('Please select a vertical before saving.', 'error'); return; }
+  if (!biz) { showStatus('Please enter a business name before saving.', 'error'); return; }
+
+  const scores = calc();
+  const payload = {
+    date: date,
+    vertical: vert,
+    bizName: biz,
+    comp1: document.getElementById('c1').value.trim(),
+    comp2: document.getElementById('c2').value.trim(),
+    comp3: document.getElementById('c3').value.trim(),
+    s1: getVal('s1'), s2: getVal('s2'), s3: getVal('s3'), s4: getVal('s4'), s5: getVal('s5'),
+    stage1Total: scores.pre,
+    s6: getVal('s6'), s7: getVal('s7'), s8: getVal('s8'), s9: getVal('s9'), s10: getVal('s10'),
+    stage2Total: scores.post,
+    finalScore: scores.total,
+    priorityAction: getPriorityLabel(scores.total)
+  };
+
+  showStatus('Saving...', 'loading');
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    showStatus('Saved — ' + biz + ' scored ' + scores.total + '/100 (' + payload.priorityAction + ')', 'success');
+  })
+  .catch(err => {
+    showStatus('Error saving. Check your connection and try again.', 'error');
+    console.error(err);
+  });
+}
+
+function resetForm() {
+  ['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10'].forEach(id => document.getElementById(id).value = '');
+  ['biz','c1','c2','c3'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('vert').value = '';
+  document.getElementById('scoreDate').valueAsDate = new Date();
+  calc();
+  document.getElementById('action-badge').className = 'action-badge action-default';
+  document.getElementById('action-badge').textContent = 'Enter scores above';
+  document.getElementById('action-text').textContent = '';
+  document.getElementById('status').style.display = 'none';
+}
+
+// HISTORY TAB
+let historyData = [];
+let sortCol = 0;
+let sortAsc = false;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'history' && historyData.length === 0) {
+    loadHistory();
+  }
+}
+
+function loadHistory() {
+  document.getElementById('historyCount').textContent = 'Loading prospect history...';
+  document.getElementById('historyContent').innerHTML = '';
+
+  fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(json => {
+      const rows = json.data || [];
+      if (rows.length <= 1) {
+        historyData = [];
+        renderHistory();
+        return;
+      }
+      historyData = rows.slice(1).filter(r => r[2]); // skip header, skip empty business name
+      renderHistory();
+    })
+    .catch(err => {
+      document.getElementById('historyCount').textContent = 'Unable to load history. Check connection.';
+      console.error(err);
+    });
+}
+
+function pillClass(score) {
+  if (score >= 80) return 'pill-high';
+  if (score >= 60) return 'pill-mid';
+  return 'pill-low';
+}
+
+function renderHistory() {
+  const content = document.getElementById('historyContent');
+  const count = document.getElementById('historyCount');
+
+  if (historyData.length === 0) {
+    count.textContent = 'No prospects scored yet';
+    content.innerHTML = '<div class="empty-state">Score your first prospect to start building your pipeline.</div>';
+    return;
+  }
+
+  count.textContent = historyData.length + ' prospect' + (historyData.length === 1 ? '' : 's') + ' scored';
+
+  // Sort
+  const sorted = [...historyData].sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase(); }
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const headers = ['Date','Vertical','Business','Final Score','Priority','Stage 1','Stage 2','Urgency','Openness','Budget','AI Usage','Fit'];
+  const colMap = [0, 1, 2, 18, 19, 11, 17, 12, 13, 14, 15, 16];
+
+  let html = '<div class="table-wrap"><table><thead><tr>';
+  headers.forEach((h, i) => {
+    html += `<th onclick="sortHistory(${colMap[i]})">${h}${sortCol === colMap[i] ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  sorted.forEach(row => {
+    const score = parseFloat(row[18]) || 0;
+    html += '<tr>';
+    html += `<td>${row[0] || ''}</td>`;
+    html += `<td>${row[1] || ''}</td>`;
+    html += `<td><strong>${row[2] || ''}</strong></td>`;
+    html += `<td><span class="score-pill ${pillClass(score)}">${row[18] || 0}</span></td>`;
+    html += `<td>${row[19] || ''}</td>`;
+    html += `<td>${row[11] || 0}/50</td>`;
+    html += `<td>${row[17] || 0}/50</td>`;
+    html += `<td>${row[12] || 0}</td>`;
+    html += `<td>${row[13] || 0}</td>`;
+    html += `<td>${row[14] || 0}</td>`;
+    html += `<td>${row[15] || 0}</td>`;
+    html += `<td>${row[16] || 0}</td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  content.innerHTML = html;
+}
+
+function sortHistory(col) {
+  if (sortCol === col) {
+    sortAsc = !sortAsc;
+  } else {
+    sortCol = col;
+    sortAsc = false;
+  }
+  renderHistory();
+}
+
+calc();
+</script>
+
+</body>
+</html>
